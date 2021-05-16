@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Example visualizations</title>
+    <style>
+        svg{
+            border: solid 1px gray;
+        }
+    </style>
+</head>
+<body>
+
+<h3>Data</h3>
+<pre>
+    {
+        nodes: [
+            {name: 'a', layer: '0', weight: 4},
+            {name: 'b', layer: '0', weight: 1},
+            {name: 'c', layer: '1', weight: 8},
+            {name: 'd', layer: '1', weight: 2},
+            {name: 'e', layer: '1', weight: 2},
+            {name: 'f', layer: '2', weight: 2},
+            {name: 'g', layer: '2', weight: 1},
+            {name: 'h', layer: '2', weight: 1},
+            {name: 'i', layer: '2', weight: 8},
+            {name: 'j', layer: '3', weight: 8},
+            {name: 'k', layer: '3', weight: 1},
+            {name: 'l', layer: '3', weight: 16},
+            {name: 'm', layer: '3', weight: 1},
+        ],
+        links: [
+            {source: 'a', target: 'c'},
+            {source: 'a', target: 'd'},
+            {source: 'b', target: 'c'},
+            {source: 'd', target: 'f'},
+            {source: 'd', target: 'g'},
+            {source: 'd', target: 'h'},
+            {source: 'e', target: 'g'},
+            {source: 'e', target: 'i'},
+            {source: 'f', target: 'k'},
+            {source: 'g', target: 'j'},
+            {source: 'g', target: 'k'},
+            {source: 'h', target: 'j'},
+            {source: 'h', target: 'k'},
+            {source: 'h', target: 'm'},
+            {source: 'i', target: 'm'},
+        ]
+    }
+</pre>
+<h3>Different visualization configurations</h3>
+<ul>
+    <li><h4>Unweighted, circle nodes with straight lines as links</h4>
+        <div>
+            <svg id="svg-ucs" width="400" height="200"></svg>
+        </div>
+    </li>
+    <li><h4>Unweighted, circle nodes with bezier curves as links</h4>
+        <div>
+            <svg id="svg-ucb" width="400" height="200"></svg>
+        </div>
+    </li>
+    <li><h4>Unweighted, rectangle nodes with straight lines as links</h4>
+        <div>
+            <svg id="svg-urs" width="400" height="200"></svg>
+        </div>
+    </li>
+    <li><h4>Unweighted, rectangle nodes with bezier curves as links</h4>
+        <div>
+            <svg id="svg-urb" width="400" height="200"></svg>
+        </div>
+    </li>
+    <li><h4>Weighted, rectangle nodes with straight lines as links</h4>
+        <div>
+            <svg id="svg-wrs" width="400" height="200"></svg>
+        </div>
+    </li>
+    <li><h4>Weighted, rectangle nodes with bezier curves as links</h4>
+        <div>
+            <svg id="svg-wrb" width="400" height="200"></svg>
+        </div>
+    </li>
+</ul>
+<script type="module">
+    import {LayeredGraph} from '../';
+
+    function renderLayeredGraph(dataLayout, targetSvgId, useCircles = true, useBezier = false, isWeighted = false) {
+        const maxTextChars = 8;
+
+        const svgElement = document.getElementById(targetSvgId);
+
+        dataLayout.links.forEach(link => {
+            const linkElement = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            const startPathRepresentation = link.start.join(' ');
+            const additionalPathRepresentation = (useBezier && (link.controlPoint0 && link.controlPoint1))
+                ? `C ${link.controlPoint0.join(' ')} ${link.controlPoint1.join(' ')} `
+                : `L `
+            const endPathRepresenetation = link.end.join(' ');
+            const linePathRepresentation = `M ${startPathRepresentation} ${additionalPathRepresentation} ${endPathRepresenetation}`;
+            linkElement.setAttribute('d', linePathRepresentation);
+            linkElement.setAttribute('style', 'fill:none;stroke:rgba(0,0,0,0.3);stroke-width:1;');
+
+            svgElement.appendChild(linkElement);
+        })
+
+        dataLayout.nodes.forEach(node => {
+            let nodeElement;
+            if (useCircles) {
+                nodeElement = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                nodeElement.setAttribute('cx', node.x + Math.floor(node.width / 2));
+                nodeElement.setAttribute('cy', node.y + Math.floor(node.width / 2));
+                nodeElement.setAttribute('r', Math.floor(node.width/2));
+                nodeElement.setAttribute('style', 'fill:crimson');
+            } else {
+                nodeElement = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                nodeElement.setAttribute('x', node.x);
+                nodeElement.setAttribute('y', node.y);
+                nodeElement.setAttribute('height', node.height);
+                nodeElement.setAttribute('width', node.width);
+                nodeElement.setAttribute('style', 'fill:crimson');
+            }
+
+
+            const nodeTextElement = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            nodeTextElement.setAttribute('style', 'dominant-baseline:middle;text-anchor:end;');
+            nodeTextElement.setAttribute('text-length', 20);
+            nodeTextElement.setAttribute('x', node.x - 1);
+            nodeTextElement.setAttribute('y', node.y + Math.floor(node.height / 2));
+            nodeTextElement.innerHTML = node.name.length > 8 ? node.name.substr(0, 5) + '...' : node.name;
+
+
+            svgElement.appendChild(nodeElement);
+            svgElement.appendChild(nodeTextElement);
+        });
+    }
+
+
+    // {name: 'e', layer: '1', weight: 2},
+    // {name: 'a', layer: '0', weight: 4},
+    // {name: 'm', layer: '3', weight: 1},
+    // {name: 'b', layer: '0', weight: 1},
+    // {name: 'g', layer: '2', weight: 1},
+    // {name: 'd', layer: '1', weight: 2},
+    // {name: 'j', layer: '3', weight: 8},
+    // {name: 'c', layer: '1', weight: 8},
+    // {name: 'i', layer: '2', weight: 8},
+    // {name: 'l', layer: '3', weight: 16},
+    // {name: 'k', layer: '3', weight: 1},
+    // {name: 'f', layer: '2', weight: 2},
+    // {name: 'h', layer: '2', weight: 1}
+
+    const data = {
+        nodes: [
+            {name: 'a', layer: '0', weight: 4},
+            {name: 'b', layer: '0', weight: 1},
+            {name: 'c', layer: '1', weight: 8},
+            {name: 'd', layer: '1', weight: 2},
+            {name: 'e', layer: '1', weight: 2},
+            {name: 'f', layer: '2', weight: 2},
+            {name: 'g', layer: '2', weight: 1},
+            {name: 'h', layer: '2', weight: 1},
+            {name: 'i', layer: '2', weight: 8},
+            {name: 'j', layer: '3', weight: 8},
+            {name: 'k', layer: '3', weight: 1},
+            {name: 'l', layer: '3', weight: 16},
+            {name: 'm', layer: '3', weight: 1},
+        ],
+        links: [
+            {source: 'a', target: 'c'},
+            {source: 'a', target: 'd'},
+            {source: 'b', target: 'c'},
+            {source: 'd', target: 'f'},
+            {source: 'd', target: 'g'},
+            {source: 'd', target: 'h'},
+            {source: 'e', target: 'g'},
+            {source: 'e', target: 'i'},
+            {source: 'f', target: 'k'},
+            {source: 'g', target: 'j'},
+            {source: 'g', target: 'k'},
+            {source: 'h', target: 'j'},
+            {source: 'h', target: 'k'},
+            {source: 'h', target: 'm'},
+            {source: 'i', target: 'm'},
+        ]
+    }
+
+    const layeredGraph = new LayeredGraph(400, 200);
+    layeredGraph.loadData(data);
+    layeredGraph.loadOptions({rendering:{linkType: 'c_bezier'}});
+
+    let dataLayout = layeredGraph.getLayout();
+
+    renderLayeredGraph(dataLayout, 'svg-ucs', true, false, true);
+    renderLayeredGraph(dataLayout, 'svg-ucb', true, true, false);
+    renderLayeredGraph(dataLayout, 'svg-urs', false, false, true);
+    renderLayeredGraph(dataLayout, 'svg-urb', false, true, false);
+
+    layeredGraph.loadOptions({weighted: true});
+    dataLayout = layeredGraph.getLayout();
+
+    renderLayeredGraph(dataLayout, 'svg-wrs', false, false, true);
+    renderLayeredGraph(dataLayout, 'svg-wrb', false, true, true);
+</script>
+</body>
+</html>
