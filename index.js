@@ -274,5 +274,13 @@ export class LayeredGraph {
             }
         });
     }
+
+    getNodeMargin(){
+        return this.options.nodeMargin;
+    }
+
+    getLayerMargin(){
+        return this.options.layerMargin;
+    }
 }
 
