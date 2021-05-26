@@ -1,3 +1,32 @@
 {
-    "type": "module"
+  "type": "module",
+  "name": "@deligianp/evolution-graph",
+  "version": "0.0.1",
+  "description": "A basic implementation of a layered graph layout which can be used to present evolution relationships between entities",
+  "main": "index.js",
+  "directories": {
+    "example": "examples"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/deligianp/evolution-graph.git"
+  },
+  "keywords": [
+    "evolution",
+    "graph",
+    "evolution-graph"
+  ],
+  "author": "Panagiotis Deligiannis",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/deligianp/evolution-graph/issues"
+  },
+  "homepage": "https://github.com/deligianp/evolution-graph#readme",
+  "files": [
+    "index.js",
+    "package.json"
+  ]
 }

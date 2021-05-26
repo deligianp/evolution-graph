@@ -1,39 +1,49 @@
+function _defineProperty(obj, key, value) {
+    if (key in obj) {
+        Object.defineProperty(obj, key, {value: value, enumerable: true, configurable: true, writable: true});
+    } else {
+        obj[key] = value;
+    }
+    return obj;
+}
+
 export class LayeredGraph {
-    nodes = null;
-    layers = null;
-    links = null;
-    inDegreeIndex = null;
-    outDegreeIndex = null;
 
-    calculatedLayout = undefined;
-
-    width = undefined;
-    height = undefined;
-
-    options = {
-        rendering: {
-            paddingX: 5,
-            paddingY: 5,
-            layerMargin: 80,
-            nodeMargin: 10,
-            nodeWidth: 20,
-            nodeUnitHeight: 20,
-            linkType: 'straight'
-        },
-        evaluateNodeHeightScore: node => {
-            const n_predecessors = this.inDegreeIndex[node.name].length;
-
-            const score = this.inDegreeIndex[node.name].reduce((total, p_node) => {
-                const parentIndex = p_node.layerIdx;
-                return total + (parentIndex + 1);
-            }, 0.0) / n_predecessors;
-            return score;
-        },
-        layerComparator: undefined,
-        weighted: false
+    _initialize() {
+        _defineProperty(this, "nodes", null);
+        _defineProperty(this, "layers", null);
+        _defineProperty(this, "links", null);
+        _defineProperty(this, "inDegreeIndex", null);
+        _defineProperty(this, "outDegreeIndex", null);
+        _defineProperty(this, "calculatedLayout", undefined);
+        _defineProperty(this, "width", undefined);
+        _defineProperty(this, "height", undefined);
+        _defineProperty(this, "options", {
+            rendering: {
+                paddingX: 5,
+                paddingY: 5,
+                layerMargin: 80,
+                nodeMargin: 10,
+                nodeWidth: 20,
+                nodeUnitHeight: 20,
+                linkType: 'straight'
+            },
+            evaluateNodeHeightScore: node => {
+                const n_predecessors = this.inDegreeIndex[node.name].length;
+                const score = this.inDegreeIndex[node.name].reduce((total, p_node) => {
+                    const parentIndex = p_node.layerIdx;
+                    return total + (parentIndex + 1);
+                }, 0.0) / n_predecessors;
+                return score;
+            },
+            layerComparator: undefined,
+            weighted: false
+        });
     }
 
     constructor(width, height, data = undefined, options = undefined) {
+        this._initialize();
+
         this.width = width;
         this.height = height;
         if (data) {
