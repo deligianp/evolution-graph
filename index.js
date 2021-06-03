@@ -58,7 +58,10 @@ export class EvolutionGraph {
                 }
             },
             layerComparator: undefined,
-            weighted: false
+            data: {
+                weightAttributeName: 'weight',
+                weighted: false
+            }
         });
     }
 
@@ -100,6 +103,10 @@ export class EvolutionGraph {
                 ...this.options.rendering,
                 ...newOptions.rendering
             },
+            data: {
+                ...this.options.data,
+                ...newOptions.data
+            }
         }
         this.calculatedLayout = null;
     }
@@ -110,9 +117,7 @@ export class EvolutionGraph {
         if (!this.calculatedLayout) {
             this._fitLayers();
             this._fitNodesLayerPosition();
-            if (this.options.weighted) {
-                this.options.rendering.nodeUnitHeight = this._inferUnitHeight();
-            }
+            this.options.rendering.nodeUnitHeight = this._inferUnitHeight();
             this._fitNodeY();
             this._fitLinks()
 
@@ -203,14 +208,32 @@ export class EvolutionGraph {
     }
 
     setWeighted(weighted) {
-        this.options.weighted = weighted;
+        this.options.data.weighted = weighted;
     }
 
     _inferUnitHeight() {
-        const [highestLayerWeight, numberOfNondes] = this.layers.map(layer => [layer.reduce((total, node) => {
-            return total + (node.weight || 0);
-        }, 0.0), layer.length]).sort((layer0Weights, layer1Weights) => layer0Weights[0] - layer1Weights[1]).pop();
-        return Math.max((this.height - (2 * this.options.rendering.paddingY) - ((numberOfNondes - 1) * this.options.rendering.nodeMargin)) / highestLayerWeight, 1);
+        const [highestLayerWeight, numberOfNodes] = this.layers.map(layer => [layer.reduce((total, node) => {
+            const nodeWeight = this.options.data.weighted ? node[this.options.data.weightAttributeName] || 0 : 1
+            // return total + (node[this.options.data.weightAttributeName] || 0);
+            return total + nodeWeight;
+        }, 0.0), layer.length]).sort((layer0Stats, layer1Stats) => {
+            // Order first by the accumulative order weight, then by the number of nodes
+            return layer0Stats[0] !== layer1Stats[0]
+                ? layer0Stats[0] - layer1Stats[0]
+                : layer0Stats[1] - layer1Stats[1];
+        }).pop();
+        const drawableHeight = this.height - (2 * this.options.rendering.paddingY) - ((numberOfNodes - 1) * this.options.rendering.nodeMargin);
+        if (this.options.data.weighted) {
+            // ? What if the highest layer in a weighted graph does not have weights ?
+            if (highestLayerWeight===0) {
+                throw 'A layer detected with a total weight of 0';
+            }
+            return Math.max(drawableHeight / highestLayerWeight, 1);
+        } else {
+            const requiredHeightForSquareNodes = numberOfNodes * this.options.rendering.nodeWidth;
+            return Math.max(drawableHeight >= requiredHeightForSquareNodes ? this.options.rendering.nodeWidth : drawableHeight / numberOfNodes, 1)
+        }
+        return Math.max((this.height - (2 * this.options.rendering.paddingY) - ((numberOfNodes - 1) * this.options.rendering.nodeMargin)) / highestLayerWeight, 1);
     }
 
     _fitNodesLayerPosition() {
@@ -234,7 +257,7 @@ export class EvolutionGraph {
         this.layers.forEach(layer => {
             let accumulatedReservedSpace = 0;
             layer.forEach((node, idx) => {
-                const nodeWeight = this.options.weighted ? node.weight || 0 : 1;
+                const nodeWeight = this.options.data.weighted ? node[this.options.data.weightAttributeName] || 0 : 1;
                 const nodeHeight = Math.max(Math.floor(nodeWeight * nodeUnitHeight), 1);
                 const nodeY = paddingY + accumulatedReservedSpace + (idx * nodeMargin);
 
