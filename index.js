@@ -36,6 +36,27 @@ export class LayeredGraph {
                 }, 0.0) / n_predecessors;
                 return score;
             },
+            nodeComparator: (nodeA, nodeB) => {
+                const nodeAPredecessors = this.inDegreeIndex[nodeA.name];
+                const nodeBPredecessors = this.inDegreeIndex[nodeB.name];
+                if (nodeAPredecessors && nodeBPredecessors) {
+                    const nodeAScore = this.options.evaluateNodeHeightScore(nodeA);
+                    const nodeBScore = this.options.evaluateNodeHeightScore(nodeB);
+                    if (nodeAScore === nodeBScore) {
+                        if (nodeAPredecessors.length === nodeBPredecessors.length) {
+                            return nodeA.name < nodeB.name ? -1 : 1;
+                        }
+                        return nodeAPredecessors.length - nodeBPredecessors.length
+                    }
+                    return nodeAScore - nodeBScore;
+                } else if (!nodeAPredecessors && !nodeBPredecessors) {
+                    return nodeA.name < nodeB.name ? -1 : 1;
+                } else if (!nodeAPredecessors) {
+                    return 1;
+                } else {
+                    return -1;
+                }
+            },
             layerComparator: undefined,
             weighted: false
         });
@@ -195,20 +216,7 @@ export class LayeredGraph {
     _fitNodesLayerPosition() {
         this.layers = this.layers.map((layer, idx) => {
             if (idx > 0) {
-                return layer.sort((nodeA, nodeB) => {
-                    const nodeAPredecessors = this.inDegreeIndex[nodeA.name];
-                    const nodeBPredecessors = this.inDegreeIndex[nodeB.name];
-                    if (!nodeAPredecessors || !nodeBPredecessors) {
-                        if (!nodeBPredecessors) return -this.layers[idx - 1].length;
-                        else return this.layers[idx - 1].length;
-                    } else {
-                        if (nodeAPredecessors.length !== nodeBPredecessors.length) {
-                            const nodeAScore = this.options.evaluateNodeHeightScore(nodeA);
-                            const nodeBScore = this.options.evaluateNodeHeightScore(nodeB);
-                            return nodeAScore - nodeBScore;
-                        } else return nodeAPredecessors.length - nodeBPredecessors.length;
-                    }
-                }).map((node, idx) => {
+                return layer.sort(this.options.nodeComparator).map((node, idx) => {
                     node.layerIdx = idx;
                     return node;
                 });
@@ -254,8 +262,8 @@ export class LayeredGraph {
                 ]
             ]
 
-            link.start=start
-            link.end=end
+            link.start = start
+            link.end = end
 
             if (this.options.rendering.linkType.toLowerCase() === 'c_bezier') {
                 const [controlPoint0, controlPoint1] = [
@@ -269,17 +277,17 @@ export class LayeredGraph {
                     ]
                 ]
 
-                link.controlPoint0=controlPoint0;
-                link.controlPoint1=controlPoint1;
+                link.controlPoint0 = controlPoint0;
+                link.controlPoint1 = controlPoint1;
             }
         });
     }
 
-    getNodeMargin(){
+    getNodeMargin() {
         return this.options.nodeMargin;
     }
 
-    getLayerMargin(){
+    getLayerMargin() {
         return this.options.layerMargin;
     }
 }
