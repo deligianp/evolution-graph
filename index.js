@@ -7,7 +7,7 @@ function _defineProperty(obj, key, value) {
     return obj;
 }
 
-export class LayeredGraph {
+export class EvolutionGraph {
 
     _initialize() {
         _defineProperty(this, "nodes", null);
