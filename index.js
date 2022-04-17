@@ -228,10 +228,11 @@ export class EvolutionGraph {
             if (highestLayerWeight===0) {
                 throw 'A layer detected with a total weight of 0';
             }
-            return Math.max(drawableHeight / highestLayerWeight, 1);
+            return drawableHeight / highestLayerWeight;
         } else {
             const requiredHeightForSquareNodes = numberOfNodes * this.options.rendering.nodeWidth;
-            return Math.max(drawableHeight >= requiredHeightForSquareNodes ? this.options.rendering.nodeWidth : drawableHeight / numberOfNodes, 1)
+            return drawableHeight >= requiredHeightForSquareNodes ? this.options.rendering.nodeWidth : drawableHeight / numberOfNodes
+            // TODO: add a warning in case the draw height for square nodes ends up being less than 1
         }
         return Math.max((this.height - (2 * this.options.rendering.paddingY) - ((numberOfNodes - 1) * this.options.rendering.nodeMargin)) / highestLayerWeight, 1);
     }
